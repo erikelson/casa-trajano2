@@ -3,7 +3,10 @@
 <head>
 <title>Project Title</title>
 <meta charset="utf-8">
-<meta name="viewport" content="target-densitydpi=device-dpi, width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui" />
+<meta name="viewport" content="target-densitydpi=device-dpi, width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style> @-ms-viewport { width: device-width; } </style>
 <link rel="stylesheet" href="vendor/reset.min.css">
 <link rel="stylesheet" href="style.css">
@@ -175,6 +178,18 @@
   <img class="icon off" src="img/fullscreen.svg">
   <img class="icon on" src="img/windowed.svg">
 </a>
+
+<div id="iosFullscreenHint">
+  <div class="box">
+    <a href="javascript:void(0)" class="close">&times;</a>
+    <p>Para ver em tela cheia no iPhone:</p>
+    <ol>
+      <li>Toque em <strong>Compartilhar</strong> na barra do Safari</li>
+      <li>Escolha <strong>Adicionar à Tela de Início</strong></li>
+      <li>Abra o tour pelo ícone criado</li>
+    </ol>
+  </div>
+</div>
 
 <a href="javascript:void(0)" id="sceneListToggle">
   <img class="icon off" src="img/expand.png">

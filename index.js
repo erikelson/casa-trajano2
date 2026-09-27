@@ -76,9 +76,15 @@
     var source = Marzipano.ImageUrlSource.fromString(
       urlPrefix + "/" + data.id + "/{z}/{f}/{y}/{x}.jpg",
       { cubeMapPreviewUrl: urlPrefix + "/" + data.id + "/preview.jpg" });
-    var geometry = new Marzipano.CubeGeometry(data.levels);
+    // On mobile, skip the highest resolution levels to load far fewer tiles.
+    var isMobile = document.body.classList.contains('mobile');
+    var maxLevelSize = isMobile ? 2048 : Infinity;
+    var levels = data.levels.filter(function(level) {
+      return level.size <= maxLevelSize;
+    });
+    var geometry = new Marzipano.CubeGeometry(levels);
 
-    var limiter = Marzipano.RectilinearView.limit.traditional(data.faceSize, 100*Math.PI/180, 120*Math.PI/180);
+    var limiter = Marzipano.RectilinearView.limit.traditional(Math.min(data.faceSize, maxLevelSize), 100*Math.PI/180, 120*Math.PI/180);
     var view = new Marzipano.RectilinearView(data.initialViewParameters, limiter);
 
     var scene = viewer.createScene({
@@ -103,7 +109,8 @@
     return {
       data: data,
       scene: scene,
-      view: view
+      view: view,
+      levels: levels
     };
   });
 
@@ -133,8 +140,29 @@
         fullscreenToggleElement.classList.remove('enabled');
       }
     });
+  } else if (isIos() && !isStandalone() && data.settings.fullscreenButton) {
+    // iPhone Safari has no fullscreen API. The only way to hide the browser
+    // bars is opening the tour from the home screen, so explain how.
+    document.body.classList.add('fullscreen-enabled');
+    var iosHintElement = document.querySelector('#iosFullscreenHint');
+    fullscreenToggleElement.addEventListener('click', function() {
+      iosHintElement.classList.add('visible');
+    });
+    iosHintElement.querySelector('.close').addEventListener('click', function() {
+      iosHintElement.classList.remove('visible');
+    });
   } else {
     document.body.classList.add('fullscreen-disabled');
+  }
+
+  function isIos() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  function isStandalone() {
+    return window.navigator.standalone === true ||
+      (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   }
 
   // Set handler for scene list toggle.
@@ -189,6 +217,63 @@
     startAutorotate();
     updateSceneName(scene);
     updateSceneList(scene);
+    pendingPreloadScene = scene;
+  }
+
+  // Preload the low resolution levels of the scenes linked from the current
+  // one, so that following a link hotspot shows a sharp image right away.
+  // Preloading starts only once the current view has finished loading.
+  var PRELOAD_MAX_LEVEL_SIZE = 1024;
+  var preloadedScenes = {};
+  var pendingPreloadScene = null;
+
+  viewer.stage().addEventListener('renderComplete', function(stable) {
+    if (stable && pendingPreloadScene) {
+      preloadNeighbors(pendingPreloadScene);
+      pendingPreloadScene = null;
+    }
+  });
+
+  function preloadLevelIndexes(scene) {
+    var indexes = [];
+    scene.levels.forEach(function(level, i) {
+      if (!level.fallbackOnly && level.size <= PRELOAD_MAX_LEVEL_SIZE) {
+        indexes.push(i);
+      }
+    });
+    return indexes;
+  }
+
+  function preloadNeighbors(scene) {
+    var wanted = {};
+    wanted[scene.data.id] = scene;
+    scene.data.linkHotspots.forEach(function(hotspot) {
+      var target = findSceneById(hotspot.target);
+      if (target) {
+        wanted[target.data.id] = target;
+      }
+    });
+
+    // Release scenes that are no longer one step away.
+    Object.keys(preloadedScenes).forEach(function(id) {
+      if (!wanted[id]) {
+        var old = preloadedScenes[id];
+        preloadLevelIndexes(old).forEach(function(i) {
+          old.scene.layer().unpinLevel(i);
+        });
+        delete preloadedScenes[id];
+      }
+    });
+
+    Object.keys(wanted).forEach(function(id) {
+      if (!preloadedScenes[id]) {
+        var target = wanted[id];
+        preloadLevelIndexes(target).forEach(function(i) {
+          target.scene.layer().pinLevel(i);
+        });
+        preloadedScenes[id] = target;
+      }
+    });
   }
 
   function updateSceneName(scene) {
