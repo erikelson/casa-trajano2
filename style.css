@@ -98,18 +98,19 @@ body.multiple-scenes.mobile #titleBar {
 #fullscreenToggle {
   display: none;
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 16px;
+  right: 16px;
   width: 40px;
   height: 40px;
-  padding: 5px;
-  background-color: rgb(103,115,131);
-  background-color: rgba(103,115,131,0.8);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background-color: rgba(0,0,0,0.25);
 }
 
 .mobile #fullscreenToggle {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
 }
 
 body.fullscreen-enabled #fullscreenToggle {
@@ -118,15 +119,17 @@ body.fullscreen-enabled #fullscreenToggle {
 
 #fullscreenToggle .icon {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 30px;
-  height: 30px;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
 }
 
 .mobile #fullscreenToggle .icon {
-  top: 10px;
-  right: 10px;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
 }
 
 #fullscreenToggle .icon.on {
@@ -332,6 +335,12 @@ body.fullscreen-enabled.mobile #autorotateToggle {
 /* Hide scene list when only a single scene exists */
 body.single-scene #sceneList, body.single-scene #sceneListToggle {
   display: none;
+}
+
+/* Scene list always hidden */
+#sceneList, #sceneListToggle, #titleBar, #autorotateToggle,
+.link-hotspot-tooltip {
+  display: none !important;
 }
 
 /* Link hotspot */
